@@ -12,10 +12,12 @@ from app.modules.auth.models import AuthToken, User  # noqa: F401
 from app.modules.communities.models import (  # noqa: F401
     Comment, Community, CommunityMember, Post, Reaction,
 )
-from app.modules.mentoring.models import MentorRequest, MentorSession  # noqa: F401
+from app.modules.mentoring.models import (  # noqa: F401
+    MentorBooking, MentorRequest, MentorSession, MentorSlot,
+)
 from app.modules.portfolio.models import PortfolioItem  # noqa: F401
 from app.modules.profiles.models import (  # noqa: F401
-    Interest, MentorProfile, Profile, Skill, UserInterest, UserSkill,
+    Interest, MentorProfile, Profile, ProfileExperience, Skill, UserInterest, UserSkill,
 )
 from app.modules.projects.models import Application, Listing, Team, TeamMember  # noqa: F401
 from app.modules.trainings.models import (  # noqa: F401

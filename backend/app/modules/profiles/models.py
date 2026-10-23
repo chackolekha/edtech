@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
-from app.core.enums import ExperienceKind, ProfessionalStatus, Visibility
+from app.core.enums import ExperienceKind, MeetingFormat, ProfessionalStatus, Visibility
 
 
 class Profile(Base):
@@ -100,5 +100,12 @@ class MentorProfile(Base):
     user_id: Mapped[uuid.UUID] = mapped_column(sa.ForeignKey("users.id"), primary_key=True)
     expertise: Mapped[str | None] = mapped_column(sa.Text)
     capacity: Mapped[int] = mapped_column(default=3)
-    availability: Mapped[str | None] = mapped_column(sa.String(200))
+    availability: Mapped[str | None] = mapped_column(sa.String(200))  # superseded by mentor_slots
     accepting_requests: Mapped[bool] = mapped_column(default=True)
+    topics: Mapped[list | None] = mapped_column(sa.JSON, nullable=True)  # coaching topics
+    session_minutes: Mapped[int] = mapped_column(default=45)
+    timezone: Mapped[str] = mapped_column(sa.String(64), default="UTC")
+    meeting_format: Mapped[MeetingFormat | None] = mapped_column(
+        sa.Enum(MeetingFormat, native_enum=False)
+    )
+    meeting_link: Mapped[str | None] = mapped_column(sa.String(500))

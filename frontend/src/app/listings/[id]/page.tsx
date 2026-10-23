@@ -112,14 +112,25 @@ export default function ListingDetailPage() {
       <div className={cardCls}>
         <div className="flex items-start justify-between gap-3">
           <h1 className="text-2xl font-bold">{listing.title}</h1>
-          <Badge color={listing.status === "open" ? "green" : "gray"}>{listing.status}</Badge>
+          <span className="flex gap-1.5">
+            {listing.kind === "guided_project" && <Badge color="blue">mentor-guided</Badge>}
+            <Badge color={listing.status === "open" ? "green" : "gray"}>{listing.status}</Badge>
+          </span>
         </div>
         <p className="mt-1 text-sm text-gray-500">
           by {listing.author_name} · team of {listing.team_size}
           {listing.duration_weeks ? ` · ${listing.duration_weeks} weeks` : ""}
+          {listing.hours_per_week ? ` · ~${listing.hours_per_week} hrs/week` : ""}
+          {listing.level ? ` · ${listing.level}` : ""}
           {listing.category ? ` · ${listing.category}` : ""}
         </p>
         <p className="mt-3 whitespace-pre-wrap text-gray-800">{listing.brief}</p>
+        {listing.deliverables && (
+          <div className="mt-3 rounded-lg bg-gray-50 p-3">
+            <h2 className="text-sm font-semibold">Expected deliverables</h2>
+            <p className="mt-1 whitespace-pre-wrap text-sm text-gray-700">{listing.deliverables}</p>
+          </div>
+        )}
         <div className="mt-3 flex flex-wrap gap-1.5">
           {listing.required_skills.map((s) => <Badge key={s}>{s}</Badge>)}
         </div>
@@ -199,6 +210,8 @@ export default function ListingDetailPage() {
               </div>
               <p className="mt-1 text-xs text-gray-500">
                 All accepted applicants join the team; a private workspace is created.
+                {listing.kind === "guided_project" &&
+                  " As a guided project, you'll be attached as the team's mentor automatically."}
               </p>
             </div>
           )}

@@ -19,6 +19,7 @@ def list_listings(
     q: str | None = None,
     skill: str | None = None,
     category: str | None = None,
+    kind: str | None = None,
     mine: bool = False,
     limit: int = 20,
     offset: int = 0,
@@ -37,6 +38,8 @@ def list_listings(
         query = query.where(Listing.category == category)
     if skill:
         query = query.where(Listing.required_skills.contains([skill]))
+    if kind:
+        query = query.where(Listing.kind == kind)
     listings = db.scalars(query.limit(limit).offset(offset)).all()
     return [service.listing_out(db, l, user) for l in listings]
 
@@ -49,7 +52,9 @@ def create_listing(body: schemas.ListingIn, user=Depends(get_current_user),
     listing = Listing(
         author_id=user.id, title=body.title, brief=body.brief, category=body.category,
         required_skills=body.required_skills, team_size=body.team_size,
-        duration_weeks=body.duration_weeks,
+        duration_weeks=body.duration_weeks, kind=body.kind,
+        deliverables=body.deliverables, level=body.level,
+        hours_per_week=body.hours_per_week,
         status=ListingStatus.open if body.publish else ListingStatus.draft,
     )
     db.add(listing)

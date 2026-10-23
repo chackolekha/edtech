@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 
 from app.core.enums import (
     ApplicationStatus,
+    ListingKind,
     ListingStatus,
     MemberRole,
     Role,
@@ -52,7 +53,9 @@ def listing_out(db: Session, listing: Listing, viewer: User | None) -> dict:
         "author_name": author.display_name if author else None,
         "title": listing.title, "brief": listing.brief, "category": listing.category,
         "required_skills": listing.required_skills or [], "team_size": listing.team_size,
-        "duration_weeks": listing.duration_weeks, "status": listing.status,
+        "duration_weeks": listing.duration_weeks, "kind": listing.kind,
+        "deliverables": listing.deliverables, "level": listing.level,
+        "hours_per_week": listing.hours_per_week, "status": listing.status,
         "application_count": db.scalar(
             select(func.count()).select_from(Application).where(
                 Application.listing_id == listing.id,
@@ -160,6 +163,11 @@ def form_team(
         if app.status != ApplicationStatus.accepted:
             raise HTTPException(422, "All selected applications must be accepted first")
         apps.append(app)
+
+    if mentor_id is None and listing.kind == ListingKind.guided_project:
+        author = db.get(User, listing.author_id)
+        if author and author.role == Role.mentor:
+            mentor_id = listing.author_id
 
     if mentor_id is not None:
         mentor = db.get(User, mentor_id)

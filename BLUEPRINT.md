@@ -112,7 +112,7 @@ repository into service initially — allowed, document the choice.
 | Role | Description |
 |---|---|
 | `student` | Default. Joins communities, applies to projects, builds portfolio. |
-| `mentor` | Verified. Lists mentorship profile, accepts requests, gives feedback. |
+| `mentor` | Verified. Coaching topics + availability slots, accepts requests, posts guided projects, gives feedback. |
 | `provider` | Verified org/faculty. Posts project listings, selects applicants. |
 | `admin` | Platform staff. Verifies mentors/providers, moderates content, views analytics. |
 
@@ -129,7 +129,9 @@ Key permission matrix (enforced backend-side):
 |---|---|---|---|---|
 | CRUD own profile | ✓ | ✓ | ✓ | ✓ |
 | Post/comment in joined community | ✓ | ✓ | ✓ | ✓ |
-| Create project listing | | | ✓ (verified) | ✓ |
+| Create project listing | | ✓ (verified; guided projects) | ✓ (verified) | ✓ |
+| Manage own slots / confirm bookings | | ✓ | | ✓ |
+| Book a mentor slot | ✓ | | | |
 | Apply to listing | ✓ | | | |
 | Select applicants / form team | | | ✓ (own listing) | ✓ |
 | Access workspace | members only | assigned mentor | owning provider | ✓ |
@@ -272,3 +274,107 @@ supports this loop. **Do not break this loop in any phase.**
 4. CI workflow: backend (ruff, mypy, pytest) + frontend (eslint, tsc, vitest).
 5. README with verified setup commands.
 6. Run all checks, produce Phase 0 completion report, **stop for review**.
+
+---
+
+## 9. Mentor module refinement (planned)
+
+Requirements: mentor profile with professional background + coaching topics;
+structured availability slots with booking management; mentor-posted projects
+with idea, skills, duration and details.
+
+### 9.1 Current state → gaps
+
+| Area | Exists | Gap |
+|---|---|---|
+| Mentor profile | `mentor_profiles` (expertise free-text, capacity, availability free-text, accepting_requests); professional fields from shared `profiles` | No structured coaching topics, session length, timezone, meeting format/link |
+| Availability | `availability` free-text string | No bookable slots; no booking lifecycle |
+| Sessions | `mentor_sessions` ad-hoc notes on accepted requests | Not linked to availability; no confirm/cancel/complete states |
+| Mentor projects | Verified mentors can already post listings (title, brief, required_skills, team_size, duration_weeks) | No guided-project marker, expected deliverables, level, weekly commitment; mentor not auto-attached to workspace |
+
+### 9.2 Schema changes
+
+```
+mentor_profiles  + topics JSON list[str]        # "System design", "Interview prep"
+                 + session_minutes int (default 45)
+                 + timezone str (default "UTC")
+                 + meeting_format enum (video|chat|in_person)
+                 + meeting_link str
+                 (availability free-text kept but superseded by slots)
+
+mentor_slots     id, mentor_id FK, starts_at, ends_at, created_at
+                 # open window; occupancy = active booking
+
+mentor_bookings  id, slot_id FK, student_id FK,
+                 mentor_request_id FK?, topic str, note text,
+                 status (pending|confirmed|declined|cancelled|completed|no_show),
+                 meeting_link str?, is_active bool, created_at, responded_at
+                 partial unique index on slot_id WHERE is_active
+                 (works on Postgres AND SQLite)
+
+listings         + kind enum (project|guided_project, default project)
+                 + deliverables text?   # expected outcomes
+                 + level str?           # beginner|intermediate|advanced
+                 + hours_per_week int?  # expected commitment
+```
+
+New enums: `BookingStatus`, `ListingKind`, `MeetingFormat`.
+
+### 9.3 API additions (`/api/v1`)
+
+```
+PATCH  /me/mentor-profile            # topics, session_minutes, timezone,
+                                     # meeting_format/link, capacity, accepting
+POST   /me/mentor-slots              # batch create [{starts_at, ends_at}, ...]
+GET    /me/mentor-slots              # own slots with booking state
+DELETE /me/mentor-slots/{id}         # remove open slot; confirmed bookings
+                                     # must be cancelled via booking endpoint
+GET    /mentors/{id}/slots           # open future slots (public, authed)
+POST   /mentor-slots/{id}/book       # student: {topic, note} → pending booking
+GET    /mentor-bookings/mine         # both parties
+POST   /mentor-bookings/{id}/confirm | decline | cancel | complete | no-show
+
+listings POST/PATCH                  # + kind, deliverables, level, hours_per_week
+GET    /listings?kind=guided_project # filter
+```
+
+### 9.4 Service rules
+
+- Only **verified** mentors manage slots; only students book.
+- Slot must start in the future; `ends_at > starts_at`; no overlapping
+  pending/confirmed booking for the same student on the same slot.
+- One active booking per slot (partial unique index + service check in
+  the same transaction — race-safe).
+- confirm → slot blocked, notify student (with meeting_link if set).
+- decline/cancel → `is_active=false`, slot re-opens, notify other party.
+- complete/no_show only after `ends_at`, mentor or admin only.
+- `form-team` on a `guided_project` authored by a mentor auto-sets
+  `workspace.mentor_id = author_id`.
+- Mentor card output gains `topics` and `next_open_slot`; `list_mentors`
+  gains `?topic=` filter.
+
+### 9.5 Frontend
+
+- `/mentors` — cards show topics badges + next available slot; topic filter.
+- `/mentors/[id]` — **new** mentor detail page: professional background
+  (from shared profile sections), topics, open slots grid, book + request.
+- `/mentorship` — mentor view: slot manager (batch create, cancel) +
+  bookings inbox (confirm/decline/complete); student view: my bookings, cancel.
+- `/me` mentor section — topics editor, session length, timezone, format, link.
+- `/onboarding` mentor section — topics input.
+- `/listings/new` + `/listings/[id]` — guided-project fields + badge;
+  `/listings` kind filter ("Guided by mentor").
+
+### 9.6 Migration & tests
+
+- Alembic autogenerate; verify partial index on both SQLite and Postgres DDL.
+- Tests: slot CRUD (mentor-only, verified-only), book → confirm → second
+  booking 409, decline/cancel re-opens slot, past slot 409, non-student
+  book 403, non-owner mentor actions 403, topics filter, guided-project
+  listing fields, auto-attach mentor on form-team.
+
+### 9.7 Explicit non-goals
+
+Google/Outlook calendar sync, video-call integration, paid sessions,
+server-side recurrence rules (client expands a weekly pattern into
+explicit slots), timezone UI beyond storing mentor tz + UTC datetimes.

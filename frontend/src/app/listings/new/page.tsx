@@ -12,6 +12,7 @@ export default function NewListingPage() {
   const [form, setForm] = useState({
     title: "", brief: "", category: "", required_skills: "",
     team_size: "1", duration_weeks: "", publish: true,
+    kind: "project", deliverables: "", level: "", hours_per_week: "",
   });
   const [error, setError] = useState<unknown>(null);
   const [busy, setBusy] = useState(false);
@@ -51,6 +52,10 @@ export default function NewListingPage() {
         required_skills: form.required_skills.split(",").map((s) => s.trim()).filter(Boolean),
         team_size: Number(form.team_size) || 1,
         duration_weeks: form.duration_weeks ? Number(form.duration_weeks) : null,
+        kind: form.kind,
+        deliverables: form.deliverables || null,
+        level: form.level || null,
+        hours_per_week: form.hours_per_week ? Number(form.hours_per_week) : null,
         publish: form.publish,
       });
       router.push(`/listings/${l.id}`);
@@ -90,6 +95,40 @@ export default function NewListingPage() {
             <Field label="Duration (weeks)">
               <input className={inputCls} type="number" min={1} value={form.duration_weeks}
                 onChange={(e) => setForm({ ...form, duration_weeks: e.target.value })} />
+            </Field>
+          </div>
+          {user.role === "mentor" && (
+            <Field label="Project type">
+              <select className={inputCls} value={form.kind}
+                onChange={(e) => setForm({ ...form, kind: e.target.value })}>
+                <option value="project">Project (students run it)</option>
+                <option value="guided_project">Guided project (you mentor the team)</option>
+              </select>
+              {form.kind === "guided_project" && (
+                <p className="mt-1 text-xs text-gray-500">
+                  You will be attached as the team&apos;s mentor when a team is formed.
+                </p>
+              )}
+            </Field>
+          )}
+          <Field label="Expected deliverables / outcomes">
+            <textarea className={inputCls} rows={2} value={form.deliverables}
+              placeholder="e.g. Working prototype + demo + code repository"
+              onChange={(e) => setForm({ ...form, deliverables: e.target.value })} />
+          </Field>
+          <div className="grid grid-cols-2 gap-3">
+            <Field label="Level">
+              <select className={inputCls} value={form.level}
+                onChange={(e) => setForm({ ...form, level: e.target.value })}>
+                <option value="">Any</option>
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </Field>
+            <Field label="Commitment (hrs/week)">
+              <input className={inputCls} type="number" min={1} max={80} value={form.hours_per_week}
+                onChange={(e) => setForm({ ...form, hours_per_week: e.target.value })} />
             </Field>
           </div>
           <label className="flex items-center gap-2 text-sm">

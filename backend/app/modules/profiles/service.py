@@ -107,6 +107,7 @@ def onboard(db: Session, user: User, body: schemas.OnboardingIn) -> Profile:
     if user.role == Role.mentor:
         mp = db.get(MentorProfile, user.id) or MentorProfile(user_id=user.id)
         mp.expertise, mp.capacity, mp.availability = body.expertise, body.capacity, body.availability
+        mp.topics = body.topics
         db.add(mp)
     user.onboarding_complete = True
     db.commit()
@@ -127,7 +128,8 @@ def patch_profile(db: Session, user: User, body: schemas.ProfilePatch) -> Profil
         if mp is None:
             mp = MentorProfile(user_id=user.id)
             db.add(mp)
-        for f in ("expertise", "capacity", "availability", "accepting_requests"):
+        for f in ("expertise", "capacity", "availability", "accepting_requests",
+                  "topics", "session_minutes", "timezone", "meeting_format", "meeting_link"):
             if f in data:
                 setattr(mp, f, data[f])
     db.commit()

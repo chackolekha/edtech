@@ -5,7 +5,7 @@ import sqlalchemy as sa
 from sqlalchemy.orm import Mapped, mapped_column
 
 from app.core.database import Base
-from app.core.enums import ApplicationStatus, ListingStatus, MemberRole
+from app.core.enums import ApplicationStatus, ListingKind, ListingStatus, MemberRole
 
 
 class Listing(Base):
@@ -21,6 +21,12 @@ class Listing(Base):
     required_skills: Mapped[list] = mapped_column(sa.JSON, default=list)  # list[str]
     team_size: Mapped[int] = mapped_column(default=1)
     duration_weeks: Mapped[int | None]
+    kind: Mapped[ListingKind] = mapped_column(
+        sa.Enum(ListingKind, native_enum=False), default=ListingKind.project
+    )
+    deliverables: Mapped[str | None] = mapped_column(sa.Text)  # expected outcomes
+    level: Mapped[str | None] = mapped_column(sa.String(20))  # beginner|intermediate|advanced
+    hours_per_week: Mapped[int | None]
     status: Mapped[ListingStatus] = mapped_column(
         sa.Enum(ListingStatus, native_enum=False), default=ListingStatus.draft
     )

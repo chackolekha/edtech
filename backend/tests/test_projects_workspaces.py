@@ -155,3 +155,39 @@ def test_applications_visible_only_to_author(client, db):
     stok, _ = make_user(client, "stua@t.com")
     r = client.get(f"{API}/listings/{listing['id']}/applications", headers=auth(stok))
     assert r.status_code == 403
+
+
+def test_guided_project_auto_attaches_mentor(client, db):
+    """A mentor-posted guided_project auto-assigns the author as workspace mentor."""
+    mtok, mid = make_user(client, "gpm@test.com", role="mentor", name="Guide",
+                          expertise="Web")
+    atok = admin_token(client, db)
+    client.post(f"{API}/admin/users/{mid}/verify", headers=auth(atok))
+    stok, _ = make_user(client, "gp-stu@t.com")
+
+    r = client.post(f"{API}/listings", headers=auth(mtok), json={
+        "title": "Guided build", "brief": "Learn React by building an app",
+        "kind": "guided_project", "deliverables": "Deployed app + demo",
+        "level": "beginner", "hours_per_week": 5, "required_skills": ["React"],
+        "publish": True})
+    assert r.status_code == 201, r.text
+    listing = r.json()
+    assert listing["kind"] == "guided_project" and listing["level"] == "beginner"
+    assert listing["deliverables"] == "Deployed app + demo"
+    assert listing["hours_per_week"] == 5
+
+    # filterable by kind
+    guided = client.get(f"{API}/listings?kind=guided_project", headers=auth(stok)).json()
+    assert [l["id"] for l in guided] == [listing["id"]]
+    assert client.get(f"{API}/listings?kind=project", headers=auth(stok)).json() == []
+
+    app_id = client.post(f"{API}/listings/{listing['id']}/apply",
+                         headers=auth(stok), json={}).json()["id"]
+    client.post(f"{API}/applications/{app_id}/accept", headers=auth(mtok))
+
+    # no explicit mentor_id — guided project auto-attaches the author
+    team = client.post(f"{API}/listings/{listing['id']}/form-team", headers=auth(mtok),
+                       json={"name": "T", "application_ids": [app_id]}).json()
+    ws = client.get(f"{API}/workspaces/{team['workspace_id']}",
+                    headers=auth(stok)).json()
+    assert ws["mentor_id"] == mid

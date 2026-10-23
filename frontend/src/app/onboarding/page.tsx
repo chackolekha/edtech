@@ -17,9 +17,10 @@ const PROFESSIONAL_STATUSES: [string, string][] = [
 const PURPOSES: [string, string][] = [
   ["find_projects", "Find projects"],
   ["find_mentor", "Find a mentor"],
-  ["join_communities", "Join communities"],
   ["learn_skills", "Learn new skills"],
+  ["networking", "Networking"],
   ["build_portfolio", "Build my portfolio"],
+  ["career_guidance", "Career guidance"],
 ];
 
 export default function OnboardingPage() {
@@ -32,7 +33,7 @@ export default function OnboardingPage() {
     professional_status: "", current_title: "", current_org: "", years_experience: "",
     portfolio_url: "", linkedin_url: "", github_url: "",
     skills: "", interests: "", purpose_note: "",
-    expertise: "", capacity: "3", availability: "",
+    expertise: "", capacity: "3", availability: "", topics: "",
   });
   const [purposes, setPurposes] = useState<string[]>([]);
   const [error, setError] = useState<unknown>(null);
@@ -86,6 +87,7 @@ export default function OnboardingPage() {
         expertise: isMentor ? form.expertise || null : null,
         capacity: isMentor ? Number(form.capacity) || 3 : 3,
         availability: isMentor ? form.availability || null : null,
+        topics: isMentor ? form.topics.split(",").map((s) => s.trim()).filter(Boolean) : [],
       });
       await refresh();
       router.push("/");
@@ -234,6 +236,10 @@ export default function OnboardingPage() {
               <Field label="Expertise">
                 <textarea className={inputCls} rows={2} value={form.expertise}
                   onChange={(e) => set("expertise", e.target.value)} />
+              </Field>
+              <Field label="Coaching topics (comma-separated)">
+                <input className={inputCls} placeholder="System design, Interview prep, Career guidance"
+                  value={form.topics} onChange={(e) => set("topics", e.target.value)} />
               </Field>
               <div className="grid grid-cols-2 gap-3">
                 <Field label="Mentee capacity">

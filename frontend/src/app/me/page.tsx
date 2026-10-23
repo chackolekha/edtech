@@ -23,6 +23,18 @@ interface Experience {
   position?: number;
 }
 
+interface MentorProfile {
+  expertise: string | null;
+  capacity: number;
+  availability: string | null;
+  accepting_requests: boolean;
+  topics: string[];
+  session_minutes: number;
+  timezone: string;
+  meeting_format: string | null;
+  meeting_link: string | null;
+}
+
 interface Profile {
   user_id: string;
   slug: string;
@@ -54,7 +66,14 @@ interface Profile {
   skill_details: SkillDetail[];
   interests: string[];
   experiences: Experience[];
+  mentor_profile: MentorProfile | null;
 }
+
+const MEETING_FORMATS: [string, string][] = [
+  ["video", "Video call"],
+  ["chat", "Chat"],
+  ["in_person", "In person"],
+];
 
 const PROFESSIONAL_STATUSES: [string, string][] = [
   ["student", "Student"],
@@ -73,9 +92,10 @@ const EXPERIENCE_KINDS: [string, string][] = [
 const PURPOSES: [string, string][] = [
   ["find_projects", "Find projects"],
   ["find_mentor", "Find a mentor"],
-  ["join_communities", "Join communities"],
   ["learn_skills", "Learn new skills"],
+  ["networking", "Networking"],
   ["build_portfolio", "Build my portfolio"],
+  ["career_guidance", "Career guidance"],
 ];
 
 function labelOf(options: [string, string][], value: string | null): string {
@@ -111,6 +131,12 @@ export default function MePage() {
 
   function updateDraft(key: keyof Profile, value: string | number | string[] | null) {
     setDraft((current) => current ? { ...current, [key]: value } : current);
+  }
+
+  function updateMentor(key: keyof MentorProfile, value: string | number | boolean | string[] | null) {
+    setDraft((current) => current && current.mentor_profile
+      ? { ...current, mentor_profile: { ...current.mentor_profile, [key]: value } }
+      : current);
   }
 
   function updateExperience(index: number, patch: Partial<Experience>) {
@@ -155,6 +181,16 @@ export default function MePage() {
         github_url: draft.github_url || null,
         purposes: draft.purposes,
         purpose_note: draft.purpose_note || null,
+        ...(draft.mentor_profile ? {
+          expertise: draft.mentor_profile.expertise || null,
+          capacity: draft.mentor_profile.capacity,
+          accepting_requests: draft.mentor_profile.accepting_requests,
+          topics: draft.mentor_profile.topics,
+          session_minutes: draft.mentor_profile.session_minutes,
+          timezone: draft.mentor_profile.timezone || "UTC",
+          meeting_format: draft.mentor_profile.meeting_format || null,
+          meeting_link: draft.mentor_profile.meeting_link || null,
+        } : {}),
       });
       await api.put<Profile>("/me/experiences", {
         experiences: draft.experiences
@@ -355,6 +391,59 @@ export default function MePage() {
             </div>
           </section>
 
+          {draft.mentor_profile && (
+            <section className="space-y-4">
+              <h2 className="border-b border-gray-200 pb-1 font-semibold">Mentor settings</h2>
+              <Field label="Expertise / mentor bio">
+                <textarea className={inputCls} rows={3} value={draft.mentor_profile.expertise ?? ""}
+                  onChange={(e) => updateMentor("expertise", e.target.value)} />
+              </Field>
+              <Field label="Coaching topics (comma-separated)">
+                <input className={inputCls} placeholder="System design, Interview prep"
+                  value={draft.mentor_profile.topics.join(", ")}
+                  onChange={(e) => updateMentor("topics",
+                    e.target.value.split(",").map((s) => s.trim()).filter(Boolean))} />
+              </Field>
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Field label="Session length (minutes)">
+                  <input className={inputCls} type="number" min={15} max={240} step={15}
+                    value={draft.mentor_profile.session_minutes}
+                    onChange={(e) => updateMentor("session_minutes", Number(e.target.value) || 45)} />
+                </Field>
+                <Field label="Timezone">
+                  <input className={inputCls} placeholder="e.g. Asia/Kolkata"
+                    value={draft.mentor_profile.timezone}
+                    onChange={(e) => updateMentor("timezone", e.target.value)} />
+                </Field>
+                <Field label="Meeting format">
+                  <select className={inputCls} value={draft.mentor_profile.meeting_format ?? ""}
+                    onChange={(e) => updateMentor("meeting_format", e.target.value || null)}>
+                    <option value="">Select…</option>
+                    {MEETING_FORMATS.map(([v, l]) => <option key={v} value={v}>{l}</option>)}
+                  </select>
+                </Field>
+                <Field label="Meeting link (sent on confirmed bookings)">
+                  <input className={inputCls} type="url" placeholder="https://meet…"
+                    value={draft.mentor_profile.meeting_link ?? ""}
+                    onChange={(e) => updateMentor("meeting_link", e.target.value)} />
+                </Field>
+                <Field label="Max mentees">
+                  <input className={inputCls} type="number" min={1} max={50}
+                    value={draft.mentor_profile.capacity}
+                    onChange={(e) => updateMentor("capacity", Number(e.target.value) || 3)} />
+                </Field>
+              </div>
+              <label className="flex items-center gap-2 text-sm text-gray-700">
+                <input type="checkbox" checked={draft.mentor_profile.accepting_requests}
+                  onChange={(e) => updateMentor("accepting_requests", e.target.checked)} />
+                Accepting new mentorship requests
+              </label>
+              <p className="text-xs text-gray-500">
+                Manage your bookable availability slots on the <a href="/mentorship" className="underline">Mentorship</a> page.
+              </p>
+            </section>
+          )}
+
           <section className="space-y-4">
             <h2 className="border-b border-gray-200 pb-1 font-semibold">Purpose of joining</h2>
             <p className="text-sm text-gray-500">Private — only visible to you and platform admins.</p>
@@ -474,6 +563,30 @@ export default function MePage() {
           ) : <p className="mt-1 text-sm text-gray-600">Not set.</p>}
           {profile.purpose_note && <p className="mt-2 whitespace-pre-wrap text-sm text-gray-700">{profile.purpose_note}</p>}
         </div>
+
+        {profile.mentor_profile && (
+          <div className="mt-5 border-t border-gray-200 pt-4">
+            <h2 className="font-semibold">Mentor settings</h2>
+            {profile.mentor_profile.expertise && (
+              <p className="mt-1 text-sm text-gray-700">{profile.mentor_profile.expertise}</p>
+            )}
+            {profile.mentor_profile.topics.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {profile.mentor_profile.topics.map((t) => <Badge key={t} color="blue">{t}</Badge>)}
+              </div>
+            )}
+            <p className="mt-2 text-sm text-gray-600">
+              {profile.mentor_profile.session_minutes}-min sessions
+              {profile.mentor_profile.meeting_format
+                ? ` · ${labelOf(MEETING_FORMATS, profile.mentor_profile.meeting_format)}` : ""}
+              {" · "}{profile.mentor_profile.timezone} · up to {profile.mentor_profile.capacity} mentees
+              {profile.mentor_profile.accepting_requests ? " · accepting requests" : " · not accepting requests"}
+            </p>
+            <p className="mt-1 text-xs text-gray-500">
+              Manage availability slots on the <a href="/mentorship" className="underline">Mentorship</a> page.
+            </p>
+          </div>
+        )}
 
         <p className="mt-4 text-sm text-gray-500">
           Public profile:{" "}

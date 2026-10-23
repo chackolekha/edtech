@@ -1,9 +1,10 @@
 import uuid
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 from app.core.enums import (
     ExperienceKind,
+    MeetingFormat,
     ProfessionalStatus,
     Purpose,
     Role,
@@ -75,6 +76,7 @@ class OnboardingIn(_SectionFields):
     expertise: str | None = None
     capacity: int = Field(default=3, ge=1, le=50)
     availability: str | None = None
+    topics: list[str] = Field(default_factory=list, max_length=20)
 
 
 class ProfilePatch(_SectionFields):
@@ -96,6 +98,11 @@ class ProfilePatch(_SectionFields):
     capacity: int | None = None
     availability: str | None = None
     accepting_requests: bool | None = None
+    topics: list[str] | None = Field(default=None, max_length=20)
+    session_minutes: int | None = Field(default=None, ge=15, le=240)
+    timezone: str | None = Field(default=None, max_length=64)
+    meeting_format: MeetingFormat | None = None
+    meeting_link: str | None = Field(default=None, max_length=500)
 
 
 class MentorProfileOut(BaseModel):
@@ -103,7 +110,17 @@ class MentorProfileOut(BaseModel):
     capacity: int
     availability: str | None
     accepting_requests: bool
+    topics: list[str] = Field(default_factory=list)
+    session_minutes: int
+    timezone: str
+    meeting_format: MeetingFormat | None
+    meeting_link: str | None
     model_config = {"from_attributes": True}
+
+    @field_validator("topics", mode="before")
+    @classmethod
+    def _topics_list(cls, v):
+        return v or []
 
 
 class ProfileOut(BaseModel):

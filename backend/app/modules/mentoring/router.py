@@ -17,10 +17,80 @@ router = APIRouter(tags=["mentoring"])
 def list_mentors(
     q: str | None = None,
     skill: str | None = None,
+    topic: str | None = None,
     user=Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    return service.list_mentors(db, q, skill)
+    return service.list_mentors(db, q, skill, topic)
+
+
+# ---------- Availability slots ----------
+
+@router.post("/me/mentor-slots", response_model=list[schemas.SlotOut], status_code=201)
+def create_slots(body: schemas.SlotsCreateIn, user=Depends(get_current_user),
+                 db: Session = Depends(get_db)):
+    return [service.slot_out(db, s) for s in service.create_slots(db, user, body.slots)]
+
+
+@router.get("/me/mentor-slots", response_model=list[schemas.SlotOut])
+def my_slots(user=Depends(get_current_user), db: Session = Depends(get_db)):
+    return [service.slot_out(db, s) for s in service.list_own_slots(db, user)]
+
+
+@router.delete("/me/mentor-slots/{slot_id}", status_code=204)
+def delete_slot(slot_id: uuid.UUID, user=Depends(get_current_user),
+                db: Session = Depends(get_db)):
+    service.delete_slot(db, user, slot_id)
+
+
+@router.get("/mentors/{mentor_id}/slots", response_model=list[schemas.SlotOut])
+def mentor_open_slots(mentor_id: uuid.UUID, user=Depends(get_current_user),
+                      db: Session = Depends(get_db)):
+    return [service.slot_out(db, s) for s in service.open_slots(db, mentor_id)]
+
+
+# ---------- Bookings ----------
+
+@router.post("/mentor-slots/{slot_id}/book", response_model=schemas.BookingOut, status_code=201)
+def book_slot(slot_id: uuid.UUID, body: schemas.BookIn,
+              user=Depends(get_current_user), db: Session = Depends(get_db)):
+    return service.booking_out(
+        db, service.book_slot(db, user, slot_id, body.topic, body.note))
+
+
+@router.get("/mentor-bookings/mine", response_model=list[schemas.BookingOut])
+def my_bookings(user=Depends(get_current_user), db: Session = Depends(get_db)):
+    return [service.booking_out(db, b) for b in service.my_bookings(db, user)]
+
+
+@router.post("/mentor-bookings/{booking_id}/confirm", response_model=schemas.BookingOut)
+def confirm_booking(booking_id: uuid.UUID, user=Depends(get_current_user),
+                    db: Session = Depends(get_db)):
+    return service.booking_out(db, service.respond_booking(db, user, booking_id, True))
+
+
+@router.post("/mentor-bookings/{booking_id}/decline", response_model=schemas.BookingOut)
+def decline_booking(booking_id: uuid.UUID, user=Depends(get_current_user),
+                    db: Session = Depends(get_db)):
+    return service.booking_out(db, service.respond_booking(db, user, booking_id, False))
+
+
+@router.post("/mentor-bookings/{booking_id}/cancel", response_model=schemas.BookingOut)
+def cancel_booking(booking_id: uuid.UUID, user=Depends(get_current_user),
+                   db: Session = Depends(get_db)):
+    return service.booking_out(db, service.cancel_booking(db, user, booking_id))
+
+
+@router.post("/mentor-bookings/{booking_id}/complete", response_model=schemas.BookingOut)
+def complete_booking(booking_id: uuid.UUID, user=Depends(get_current_user),
+                     db: Session = Depends(get_db)):
+    return service.booking_out(db, service.complete_booking(db, user, booking_id, False))
+
+
+@router.post("/mentor-bookings/{booking_id}/no-show", response_model=schemas.BookingOut)
+def no_show_booking(booking_id: uuid.UUID, user=Depends(get_current_user),
+                    db: Session = Depends(get_db)):
+    return service.booking_out(db, service.complete_booking(db, user, booking_id, True))
 
 
 @router.post("/mentor-requests", response_model=schemas.MentorRequestOut, status_code=201)

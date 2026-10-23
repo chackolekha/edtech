@@ -104,5 +104,25 @@ class Purpose(str, enum.Enum):
     career_guidance = "career_guidance"
 
 
+class MeetingFormat(str, enum.Enum):
+    video = "video"
+    chat = "chat"
+    in_person = "in_person"
+
+
+class BookingStatus(str, enum.Enum):
+    pending = "pending"
+    confirmed = "confirmed"
+    declined = "declined"
+    cancelled = "cancelled"
+    completed = "completed"
+    no_show = "no_show"
+
+
+class ListingKind(str, enum.Enum):
+    project = "project"
+    guided_project = "guided_project"
+
+
 REACTABLE_TYPES = ("post", "comment")
 FLAGGABLE_TYPES = ("post", "comment", "profile", "listing")

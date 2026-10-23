@@ -3,7 +3,9 @@ from datetime import datetime
 
 from pydantic import BaseModel, Field
 
-from app.core.enums import ApplicationStatus, ListingStatus
+from app.core.enums import ApplicationStatus, ListingKind, ListingStatus
+
+LISTING_LEVELS = ("beginner", "intermediate", "advanced")
 
 
 class ListingIn(BaseModel):
@@ -13,6 +15,10 @@ class ListingIn(BaseModel):
     required_skills: list[str] = []
     team_size: int = Field(default=1, ge=1, le=50)
     duration_weeks: int | None = Field(default=None, ge=1, le=104)
+    kind: ListingKind = ListingKind.project
+    deliverables: str | None = None
+    level: str | None = Field(default=None, pattern="^(beginner|intermediate|advanced)$")
+    hours_per_week: int | None = Field(default=None, ge=1, le=80)
     publish: bool = False  # true → status open, false → draft
 
 
@@ -23,6 +29,10 @@ class ListingPatch(BaseModel):
     required_skills: list[str] | None = None
     team_size: int | None = Field(default=None, ge=1, le=50)
     duration_weeks: int | None = None
+    kind: ListingKind | None = None
+    deliverables: str | None = None
+    level: str | None = Field(default=None, pattern="^(beginner|intermediate|advanced)$")
+    hours_per_week: int | None = None
 
 
 class ListingOut(BaseModel):
@@ -35,6 +45,10 @@ class ListingOut(BaseModel):
     required_skills: list
     team_size: int
     duration_weeks: int | None
+    kind: ListingKind
+    deliverables: str | None
+    level: str | None
+    hours_per_week: int | None
     status: ListingStatus
     application_count: int = 0
     my_application_id: uuid.UUID | None = None
