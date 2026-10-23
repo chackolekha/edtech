@@ -15,5 +15,34 @@ services:
       timeout: 3s
       retries: 10
 
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://edtech:edtech@db:5432/edtech
+      JWT_SECRET: ${JWT_SECRET:-dev-secret-change-me}
+      STORAGE_DIR: /data/storage
+      CORS_ORIGINS: http://localhost:3000
+      # DEV_MODE returns verification/reset tokens in API responses — dev only.
+      DEV_MODE: ${DEV_MODE:-true}
+    ports:
+      - "8000:8000"
+    volumes:
+      - storage:/data/storage
+    depends_on:
+      db:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        # Browser-facing URL; must reach the backend's published port.
+        NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000/api/v1}
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
 volumes:
   pgdata:
+  storage:

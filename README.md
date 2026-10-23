@@ -64,10 +64,25 @@ npm run dev     # http://localhost:3000
 `NEXT_PUBLIC_API_URL` defaults to `http://localhost:8000/api/v1`; create
 `frontend/.env.local` to override.
 
+### Docker (full stack)
+
+```bash
+docker compose up --build        # postgres + backend + frontend
+```
+
+- Frontend: http://localhost:3000 · API: http://localhost:8000/docs
+- Backend runs `alembic upgrade head` on start, then uvicorn on Postgres.
+- Seed the admin after first boot:
+  `docker compose exec backend python -m app.seed`
+- `NEXT_PUBLIC_API_URL` is baked into the frontend bundle at build time —
+  override via the compose build arg for non-localhost deploys.
+- `JWT_SECRET` and `DEV_MODE` are overridable via environment; set a real
+  `JWT_SECRET` and `DEV_MODE=false` outside of local dev.
+
 ## Tests & checks
 
 ```bash
-cd backend && python -m pytest tests/ -q     # 33 tests: lifecycle + authz
+cd backend && python -m pytest tests/ -q     # 45 tests: lifecycle + authz
 cd backend && python -m alembic upgrade head # migration check
 cd frontend && npx eslint src && npm run build
 ```
