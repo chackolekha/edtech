@@ -11,22 +11,36 @@ const links = [
   { href: "/trainings", label: "Trainings" },
 ];
 
+const ROLE_LABELS: Record<string, string> = {
+  student: "Student",
+  mentor: "Mentor",
+  provider: "Provider",
+  admin: "Admin",
+};
+
 export default function Nav() {
   const { user, logout } = useAuth();
   const pathname = usePathname();
   const router = useRouter();
 
   const linkCls = (href: string) =>
-    `text-sm ${pathname?.startsWith(href) ? "font-semibold text-blue-700" : "text-gray-600 hover:text-gray-900"}`;
+    `rounded-md px-2.5 py-1.5 text-sm transition ${
+      pathname?.startsWith(href)
+        ? "bg-accent-soft font-semibold text-accent-strong"
+        : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
+    }`;
 
   return (
-    <header className="border-b border-gray-200 bg-white">
-      <div className="mx-auto flex max-w-6xl items-center gap-6 px-4 py-3">
-        <Link href="/" className="text-lg font-bold text-blue-700">
-          EdTech
+    <header className="sticky top-0 z-40 border-b border-gray-200/80 bg-white/90 backdrop-blur">
+      <div className="mx-auto flex max-w-6xl items-center gap-5 px-4 py-3">
+        <Link href="/" className="flex items-center gap-2">
+          <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-accent text-sm font-bold text-white">
+            E
+          </span>
+          <span className="text-lg font-bold tracking-tight text-gray-900">EdTech</span>
         </Link>
         {user && (
-          <nav className="flex items-center gap-4">
+          <nav className="flex items-center gap-1">
             {links.map((l) => (
               <Link key={l.href} href={l.href} className={linkCls(l.href)}>
                 {l.label}
@@ -61,7 +75,10 @@ export default function Nav() {
               <Link href="/notifications" className={linkCls("/notifications")}>
                 Notifications
               </Link>
-              <Link href="/me" className="text-sm text-gray-600 hover:text-gray-900">
+              <span className="rounded-full bg-accent-soft px-2.5 py-0.5 text-xs font-semibold text-accent-strong ring-1 ring-inset ring-accent-muted">
+                {ROLE_LABELS[user.role] ?? user.role}
+              </span>
+              <Link href="/me" className="max-w-40 truncate text-sm text-gray-600 hover:text-gray-900">
                 {user.email}
               </Link>
               <button
@@ -69,7 +86,7 @@ export default function Nav() {
                   logout();
                   router.push("/");
                 }}
-                className="rounded-md border border-gray-300 px-3 py-1.5 text-sm text-gray-700 hover:bg-gray-50"
+                className="rounded-lg border border-gray-300 px-3 py-1.5 text-sm text-gray-700 transition hover:bg-gray-50"
               >
                 Log out
               </button>
@@ -81,7 +98,7 @@ export default function Nav() {
               </Link>
               <Link
                 href="/register"
-                className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-blue-700"
+                className="rounded-lg bg-accent px-3.5 py-1.5 text-sm font-medium text-white shadow-xs transition hover:bg-accent-strong"
               >
                 Sign up
               </Link>

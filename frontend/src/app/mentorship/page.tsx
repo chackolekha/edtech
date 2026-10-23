@@ -274,7 +274,7 @@ export default function MentorshipPage() {
                   </p>
                   {b.note && <p className="mt-1 text-sm text-gray-600">{b.note}</p>}
                   {b.meeting_link && b.status === "confirmed" && (
-                    <a className="mt-1 block text-sm text-blue-600 underline"
+                    <a className="mt-1 block text-sm text-accent underline"
                       href={b.meeting_link} target="_blank" rel="noreferrer">
                       Join meeting
                     </a>

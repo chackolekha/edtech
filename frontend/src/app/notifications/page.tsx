@@ -86,7 +86,7 @@ export default function NotificationsPage() {
       ) : (
         items.map((n) => (
           <button key={n.id} onClick={() => markRead(n)}
-            className={`${cardCls} block w-full text-left ${n.read_at ? "opacity-60" : "border-l-4 border-l-blue-500"}`}>
+            className={`${cardCls} block w-full text-left ${n.read_at ? "opacity-60" : "border-l-4 border-l-accent"}`}>
             <p className="text-sm font-medium">{LABELS[n.type] ?? n.type}</p>
             <p className="mt-0.5 text-xs text-gray-500">
               {new Date(n.created_at).toLocaleString()}

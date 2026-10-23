@@ -97,7 +97,7 @@ export default function CommunitiesPage() {
             <div key={c.id} className={cardCls}>
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <Link href={`/communities/${c.id}`} className="font-semibold text-blue-700 hover:underline">
+                  <Link href={`/communities/${c.id}`} className="font-semibold text-accent hover:underline">
                     {c.name}
                   </Link>
                   <p className="mt-1 text-sm text-gray-600">{c.description}</p>

@@ -121,7 +121,7 @@ export default function NewTrainingPage() {
                   }} />
               </div>
             ))}
-            <button type="button" className="mt-2 text-sm text-blue-600 hover:underline"
+            <button type="button" className="mt-2 text-sm text-accent hover:underline"
               onClick={() => setLessons([...lessons, { title: "", points: "10" }])}>
               + Add lesson
             </button>

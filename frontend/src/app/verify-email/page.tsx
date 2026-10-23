@@ -36,7 +36,7 @@ function VerifyInner() {
         {status === "busy" && <Loading label="Verifying…" />}
         {status === "ok" && (
           <p className="mt-3 text-sm text-green-700">
-            Email verified. <Link href="/login" className="text-blue-600 underline">Log in →</Link>
+            Email verified. <Link href="/login" className="text-accent underline">Log in →</Link>
           </p>
         )}
         {status !== "busy" && status !== "ok" && (

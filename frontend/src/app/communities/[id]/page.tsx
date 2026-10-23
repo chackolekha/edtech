@@ -88,7 +88,7 @@ export default function CommunityPage() {
           ) : (
             posts.map((p) => (
               <div key={p.id} className={cardCls}>
-                <Link href={`/posts/${p.id}`} className="font-semibold text-blue-700 hover:underline">
+                <Link href={`/posts/${p.id}`} className="font-semibold text-accent hover:underline">
                   {p.title}
                 </Link>
                 <p className="mt-1 line-clamp-2 text-sm text-gray-600">{p.body}</p>

@@ -547,9 +547,9 @@ export default function MePage() {
             </div>
           </div>
           <div className="mt-4 flex flex-wrap gap-3 text-sm">
-            {profile.portfolio_url && <a className="text-blue-600 underline" href={profile.portfolio_url} target="_blank" rel="noreferrer">Portfolio</a>}
-            {profile.linkedin_url && <a className="text-blue-600 underline" href={profile.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a>}
-            {profile.github_url && <a className="text-blue-600 underline" href={profile.github_url} target="_blank" rel="noreferrer">GitHub</a>}
+            {profile.portfolio_url && <a className="text-accent underline" href={profile.portfolio_url} target="_blank" rel="noreferrer">Portfolio</a>}
+            {profile.linkedin_url && <a className="text-accent underline" href={profile.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a>}
+            {profile.github_url && <a className="text-accent underline" href={profile.github_url} target="_blank" rel="noreferrer">GitHub</a>}
           </div>
         </div>
 
@@ -590,7 +590,7 @@ export default function MePage() {
 
         <p className="mt-4 text-sm text-gray-500">
           Public profile:{" "}
-          <a className="text-blue-600 underline" href={`/u/${profile.slug}`}>
+          <a className="text-accent underline" href={`/u/${profile.slug}`}>
             /u/{profile.slug}
           </a>
         </p>

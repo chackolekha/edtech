@@ -41,7 +41,7 @@ export default function WorkspacesPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2">
           {items.map((w) => (
-            <Link key={w.id} href={`/workspaces/${w.id}`} className={`${cardCls} block hover:border-blue-300`}>
+            <Link key={w.id} href={`/workspaces/${w.id}`} className={`${cardCls} block hover:border-accent`}>
               <div className="flex items-center justify-between">
                 <h2 className="font-semibold">{w.listing_title ?? "Project"}</h2>
                 <Badge color={w.status === "completed" ? "green" : w.status === "submitted" ? "yellow" : "blue"}>

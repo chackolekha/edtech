@@ -41,7 +41,7 @@ export default function ForgotPasswordPage() {
               <div className="mt-3 rounded-md bg-yellow-50 p-3 text-yellow-900">
                 <b>Dev mode:</b>{" "}
                 <Link href={`/reset-password?token=${encodeURIComponent(devToken)}`}
-                  className="text-blue-700 underline">
+                  className="text-accent underline">
                   Reset now →
                 </Link>
               </div>

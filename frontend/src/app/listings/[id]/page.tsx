@@ -143,7 +143,7 @@ export default function ListingDetailPage() {
         {workspaceId && (
           <p className="mt-4 text-sm">
             Team formed —{" "}
-            <Link href={`/workspaces/${workspaceId}`} className="text-blue-600 underline">
+            <Link href={`/workspaces/${workspaceId}`} className="text-accent underline">
               open workspace →
             </Link>
           </p>

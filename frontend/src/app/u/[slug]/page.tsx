@@ -134,9 +134,9 @@ export default function PublicProfilePage() {
           {profile.skill_details.map((s) => <Badge key={s.name}>{s.name} · {s.level}/5</Badge>)}
         </div>
         <div className="mt-3 flex flex-wrap gap-3 text-sm">
-          {profile.portfolio_url && <a className="text-blue-600 underline" href={profile.portfolio_url} target="_blank" rel="noreferrer">Portfolio</a>}
-          {profile.linkedin_url && <a className="text-blue-600 underline" href={profile.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a>}
-          {profile.github_url && <a className="text-blue-600 underline" href={profile.github_url} target="_blank" rel="noreferrer">GitHub</a>}
+          {profile.portfolio_url && <a className="text-accent underline" href={profile.portfolio_url} target="_blank" rel="noreferrer">Portfolio</a>}
+          {profile.linkedin_url && <a className="text-accent underline" href={profile.linkedin_url} target="_blank" rel="noreferrer">LinkedIn</a>}
+          {profile.github_url && <a className="text-accent underline" href={profile.github_url} target="_blank" rel="noreferrer">GitHub</a>}
         </div>
       </div>
       <h2 className="font-semibold">Portfolio</h2>

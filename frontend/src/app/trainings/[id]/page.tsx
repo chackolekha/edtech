@@ -103,7 +103,7 @@ export default function TrainingDetailPage() {
               </span>
             </div>
             <div className="mt-2 h-2 rounded-full bg-gray-200">
-              <div className="h-2 rounded-full bg-blue-600"
+              <div className="h-2 rounded-full bg-accent"
                 style={{ width: `${enrollment.progress_pct}%` }} />
             </div>
           </div>

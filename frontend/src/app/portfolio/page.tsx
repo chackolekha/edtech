@@ -64,7 +64,7 @@ export default function PortfolioPage() {
       <div className="flex items-center justify-between">
         <h1 className="text-2xl font-bold">My portfolio</h1>
         {slug && (
-          <Link href={`/u/${slug}`} className="text-sm text-blue-600 hover:underline">
+          <Link href={`/u/${slug}`} className="text-sm text-accent hover:underline">
             View public page →
           </Link>
         )}

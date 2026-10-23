@@ -64,6 +64,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     refresh();
   }, [refresh]);
 
+  useEffect(() => {
+    if (user) {
+      document.documentElement.dataset.role = user.role;
+    } else {
+      delete document.documentElement.dataset.role;
+    }
+  }, [user]);
+
   const login = useCallback(async (email: string, password: string) => {
     const { access_token } = await api.post<{ access_token: string }>(
       "/auth/login",

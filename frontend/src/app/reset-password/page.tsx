@@ -38,7 +38,7 @@ function ResetInner() {
         {done ? (
           <p className="mt-3 text-sm text-green-700">
             Password updated.{" "}
-            <Link href="/login" className="text-blue-600 underline">Log in →</Link>
+            <Link href="/login" className="text-accent underline">Log in →</Link>
           </p>
         ) : (
           <form onSubmit={submit} className="mt-4 space-y-4">

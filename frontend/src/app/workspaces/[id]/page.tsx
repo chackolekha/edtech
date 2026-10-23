@@ -246,7 +246,7 @@ export default function WorkspacePage() {
                 </Badge>
                 {d.has_file && (
                   <button onClick={() => downloadFile(`/deliverables/${d.id}/download`, d.title)}
-                    className="text-blue-600 text-xs underline">download</button>
+                    className="text-accent text-xs underline">download</button>
                 )}
                 {canReview && d.status === "submitted" && (
                   <>

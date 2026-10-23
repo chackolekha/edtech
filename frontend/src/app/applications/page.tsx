@@ -51,13 +51,13 @@ export default function ApplicationsPage() {
       ) : items.length === 0 ? (
         <Empty>
           No applications yet.{" "}
-          <Link href="/listings" className="text-blue-600 underline">Browse projects →</Link>
+          <Link href="/listings" className="text-accent underline">Browse projects →</Link>
         </Empty>
       ) : (
         items.map((a) => (
           <div key={a.id} className={cardCls}>
             <div className="flex items-center justify-between">
-              <Link href={`/listings/${a.listing_id}`} className="font-medium text-blue-700 hover:underline">
+              <Link href={`/listings/${a.listing_id}`} className="font-medium text-accent hover:underline">
                 View listing
               </Link>
               <Badge color={

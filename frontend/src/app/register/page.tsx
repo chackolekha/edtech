@@ -51,13 +51,13 @@ export default function RegisterPage() {
               <b>Dev mode:</b> no real email is sent. Verify directly:
               <Link
                 href={`/verify-email?token=${encodeURIComponent(devToken)}&email=${encodeURIComponent(email)}`}
-                className="mt-2 block break-all text-blue-700 underline"
+                className="mt-2 block break-all text-accent underline"
               >
                 Verify email →
               </Link>
             </div>
           )}
-          <Link href="/login" className="mt-4 inline-block text-sm text-blue-600 hover:underline">
+          <Link href="/login" className="mt-4 inline-block text-sm text-accent hover:underline">
             Go to login
           </Link>
         </div>
@@ -97,7 +97,7 @@ export default function RegisterPage() {
           </button>
         </form>
         <p className="mt-4 text-sm">
-          <Link href="/login" className="text-blue-600 hover:underline">
+          <Link href="/login" className="text-accent hover:underline">
             Already have an account? Log in
           </Link>
         </p>

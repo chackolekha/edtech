@@ -74,7 +74,7 @@ export default function TrainingsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {items.map((t) => (
-            <Link key={t.id} href={`/trainings/${t.id}`} className={`${cardCls} block hover:border-blue-300`}>
+            <Link key={t.id} href={`/trainings/${t.id}`} className={`${cardCls} block hover:border-accent`}>
               <div className="flex items-start justify-between gap-2">
                 <h2 className="font-semibold">{t.title}</h2>
                 <Badge color={t.is_paid ? "yellow" : "green"}>
