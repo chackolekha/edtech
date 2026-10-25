@@ -40,5 +40,21 @@ services:
     depends_on:
       - backend
 
+  # Optional HTTPS front (see deploy/Caddyfile). With Caddy on 80/443 you can
+  # drop the published ports on backend/frontend and only expose Caddy.
+  # caddy:
+  #   image: caddy:2-alpine
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+  #     - caddy_data:/data
+  #   depends_on:
+  #     - backend
+  #     - frontend
+
 volumes:
   storage:
+  # caddy_data:

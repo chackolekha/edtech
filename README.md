@@ -110,6 +110,30 @@ Notes:
 - `NEXT_PUBLIC_API_URL`-less local builds: swap `image:` for the commented
   `build:` blocks to build on the host instead of pulling.
 
+### Demo deploy — EC2/Lightsail + Docker Hub + Neon
+
+Smallest production footprint: one Ubuntu 24.04 host (`t3.micro` works;
+add 2 GB swap on 1 GB RAM), external Neon DB, images from Docker Hub.
+
+1. Open inbound **3000** and **8000** (demo on raw IP) — or 80/443 with Caddy.
+2. Run on the host:
+
+   ```bash
+   curl -fsSL https://raw.githubusercontent.com/chackolekha/edtech/main/scripts/bootstrap.sh | bash
+   ```
+
+   `scripts/bootstrap.sh` installs Docker, clones the repo, prompts for the
+   Neon `DATABASE_URL` + CORS origin, writes `.env`, pulls images, runs
+   `up -d`, and seeds the admin.
+3. Set GitHub secret `NEXT_PUBLIC_API_URL=http://<host-ip>:8000/api/v1` and
+   re-run the Build & push workflow so the frontend image is rebuilt.
+4. App: `http://<host-ip>:3000` · docs: `http://<host-ip>:8000/docs` ·
+   admin: `admin@edtech-platform.com` / `admin1234` (change it).
+
+**HTTPS + domain**: edit `deploy/Caddyfile` (two subdomains), uncomment the
+`caddy` service in `compose.prod.yml`, point DNS at the host, and update
+`CORS_ORIGINS` + `NEXT_PUBLIC_API_URL` to the `https://` URLs.
+
 ### CI/CD pipelines (`.github/workflows/`)
 
 - **`ci.yml`** — tests + lint + build on every push/PR.
