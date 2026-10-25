@@ -21,6 +21,9 @@ on:
     branches: [main]
   workflow_dispatch:
 
+permissions:
+  contents: read   # checkout only — Docker Hub auth comes from secrets
+
 env:
   BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/edtech-backend
   FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/edtech-frontend
