@@ -1,0 +1,50 @@
+# BACKUP pipeline — pushes images to AWS ECR instead of Docker Hub.
+# Disabled for pushes: manual trigger only (Actions → "Build & push to ECR (backup)").
+# The active pipeline is build-push.yml (Docker Hub).
+#
+# Requires repo secrets: AWS_ROLE_ARN, NEXT_PUBLIC_API_URL
+# Requires OIDC provider + IAM role (see README → Deploy).
+
+name: Build & push to ECR (backup)
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write   # OIDC — no stored AWS keys
+  contents: read
+
+env:
+  AWS_REGION: ap-south-1          # <- your region
+  ECR_BACKEND: edtech-backend
+  ECR_FRONTEND: edtech-frontend
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - uses: aws-actions/amazon-ecr-login@v2
+        id: ecr
+
+      - name: Build & push backend
+        run: |
+          REG=${{ steps.ecr.outputs.registry }}
+          docker build -t $REG/$ECR_BACKEND:${{ github.sha }} \
+                       -t $REG/$ECR_BACKEND:latest backend/
+          docker push $REG/$ECR_BACKEND --all-tags
+
+      - name: Build & push frontend
+        run: |
+          REG=${{ steps.ecr.outputs.registry }}
+          docker build \
+            --build-arg NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }} \
+            -t $REG/$ECR_FRONTEND:${{ github.sha }} \
+            -t $REG/$ECR_FRONTEND:latest frontend/
+          docker push $REG/$ECR_FRONTEND --all-tags

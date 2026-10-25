@@ -81,7 +81,7 @@ docker compose up --build        # postgres + backend + frontend
 
 ### Production compose (`compose.prod.yml`)
 
-Pulls pre-built images (e.g. from ECR) instead of building, and uses an
+Pulls pre-built images (Docker Hub or ECR) instead of building, and uses an
 external Postgres — there is no `db` service. Tested target: Neon.
 
 ```bash
@@ -89,7 +89,7 @@ external Postgres — there is no `db` service. Tested target: Neon.
 DATABASE_URL=postgresql+psycopg://user:pw@ep-xxx-pooler.<region>.aws.neon.tech/edtech?sslmode=require
 JWT_SECRET=<openssl rand -hex 32>
 CORS_ORIGINS=https://<your-domain>
-ECR_REGISTRY=<account>.dkr.ecr.<region>.amazonaws.com
+IMAGE_REGISTRY=<dockerhub-username>   # or <account>.dkr.ecr.<region>.amazonaws.com
 IMAGE_TAG=latest
 
 docker compose -f compose.prod.yml pull
@@ -109,6 +109,21 @@ Notes:
   (CI build arg) — setting it in `.env` has no effect.
 - `NEXT_PUBLIC_API_URL`-less local builds: swap `image:` for the commented
   `build:` blocks to build on the host instead of pulling.
+
+### CI/CD pipelines (`.github/workflows/`)
+
+- **`ci.yml`** — tests + lint + build on every push/PR.
+- **`build-push.yml`** — active pipeline: builds both images and pushes
+  `latest` + commit-SHA tags to **Docker Hub** on `main` pushes.
+  Secrets: `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN` (Hub access token),
+  `NEXT_PUBLIC_API_URL`.
+  Optional SSH deploy job: set repo variable `DEPLOY_HOST`
+  (e.g. `ubuntu@<host>`), `DEPLOY_USER`, `DEPLOY_DIR`, and secret
+  `DEPLOY_SSH_KEY` — the host runs `compose.prod.yml` via `git pull` +
+  `compose pull && up -d`.
+- **`build-push-ecr.yml`** — backup pipeline targeting **AWS ECR**;
+  manual trigger only (workflow_dispatch). Secrets: `AWS_ROLE_ARN`
+  (OIDC) + `NEXT_PUBLIC_API_URL`.
 
 ## Tests & checks
 

@@ -1,14 +1,13 @@
-# Production compose — pulls pre-built images from ECR.
+# Production compose — pulls pre-built images (Docker Hub or ECR).
 # Postgres is external (Neon); STORAGE_DIR uses a named volume on the host.
 #
 # Required on the host: a .env file next to this file with
-#   DATABASE_URL, JWT_SECRET, CORS_ORIGINS  (see .env.example)
-# and ECR registry/repo in the image tags below (or build locally instead —
-# swap each `image:` for `build: ./backend` / `build: ./frontend`).
+#   DATABASE_URL, JWT_SECRET, CORS_ORIGINS, IMAGE_REGISTRY  (see .env.example)
+# or build locally instead — swap each `image:` for the commented `build:`.
 
 services:
   backend:
-    image: ${ECR_REGISTRY:-localhost}/edtech-backend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-localhost}/edtech-backend:${IMAGE_TAG:-latest}
     # build: ./backend
     restart: unless-stopped
     environment:
@@ -30,7 +29,7 @@ services:
       start_period: 20s
 
   frontend:
-    image: ${ECR_REGISTRY:-localhost}/edtech-frontend:${IMAGE_TAG:-latest}
+    image: ${IMAGE_REGISTRY:-localhost}/edtech-frontend:${IMAGE_TAG:-latest}
     # build:
     #   context: ./frontend
     #   args:
