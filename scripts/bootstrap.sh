@@ -37,6 +37,13 @@ if [ ! -f .env ]; then
   read -rp "Neon DATABASE_URL (postgresql+psycopg://...-pooler...?sslmode=require): " DB_URL
   read -rp "CORS origin — public app URL (http://<ip>:3000 or https://app.example.com): " ORIGIN
   read -rp "Image registry/namespace [chackolekha]: " REG
+  # Guard against multi-line paste slips — keep only the first token.
+  DB_URL="${DB_URL%%[[:space:]]*}"
+  ORIGIN="${ORIGIN%%[[:space:]]*}"
+  REG="${REG%%[[:space:]]*}"
+  if [[ "$DB_URL" != *"://"* ]]; then
+    echo "!! WARNING: DATABASE_URL doesn't look like a connection URL — fix .env before going live." >&2
+  fi
   cat > .env <<EOF
 DATABASE_URL=${DB_URL}
 JWT_SECRET=$(openssl rand -hex 32)
