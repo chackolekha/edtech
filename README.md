@@ -79,6 +79,37 @@ docker compose up --build        # postgres + backend + frontend
 - `JWT_SECRET` and `DEV_MODE` are overridable via environment; set a real
   `JWT_SECRET` and `DEV_MODE=false` outside of local dev.
 
+### Production compose (`compose.prod.yml`)
+
+Pulls pre-built images (e.g. from ECR) instead of building, and uses an
+external Postgres — there is no `db` service. Tested target: Neon.
+
+```bash
+# on the host: .env next to compose.prod.yml
+DATABASE_URL=postgresql+psycopg://user:pw@ep-xxx-pooler.<region>.aws.neon.tech/edtech?sslmode=require
+JWT_SECRET=<openssl rand -hex 32>
+CORS_ORIGINS=https://<your-domain>
+ECR_REGISTRY=<account>.dkr.ecr.<region>.amazonaws.com
+IMAGE_TAG=latest
+
+docker compose -f compose.prod.yml pull
+docker compose -f compose.prod.yml up -d
+```
+
+Notes:
+
+- Use Neon's **pooled** endpoint (`-pooler` host) — `postgresql+psycopg://`
+  is the SQLAlchemy/psycopg-3 driver; `sslmode=require` is mandatory.
+- Backend runs `alembic upgrade head` on start — first boot creates the
+  full schema in Neon. If DDL through the pooler ever misbehaves, run a
+  one-off migration against the **direct** endpoint:
+  `DATABASE_URL=<direct-url> docker compose -f compose.prod.yml run --rm backend alembic upgrade head`
+- Neon scale-to-zero can cold-start ~1s on the first request after idle.
+- `NEXT_PUBLIC_API_URL` is baked into the frontend image at **build** time
+  (CI build arg) — setting it in `.env` has no effect.
+- `NEXT_PUBLIC_API_URL`-less local builds: swap `image:` for the commented
+  `build:` blocks to build on the host instead of pulling.
+
 ## Tests & checks
 
 ```bash
