@@ -1,0 +1,61 @@
+# Production compose — pulls pre-built images (Docker Hub or ECR).
+# Database is external/managed; never put a `db` service here.
+#
+# Required on the host: a .env file next to this file with
+#   DATABASE_URL, <APP_SECRET>, CORS_ORIGINS, IMAGE_REGISTRY  (see .env.example)
+# or build locally instead — swap each `image:` for the commented `build:`.
+
+services:
+  backend:
+    image: ${IMAGE_REGISTRY:-localhost}/<APP>-backend:${IMAGE_TAG:-latest}
+    # build: ./backend
+    restart: unless-stopped
+    environment:
+      # e.g. postgresql+psycopg://user:pw@<endpoint>-pooler.<region>.aws.neon.tech/<db>?sslmode=require
+      DATABASE_URL: ${DATABASE_URL}
+      <APP_SECRET>: ${<APP_SECRET>}        # e.g. JWT_SECRET
+      CORS_ORIGINS: ${CORS_ORIGINS}
+      <STORAGE_DIR_VAR>: /data/storage     # if the app writes files
+      <DEBUG_FLAG>: "false"                # e.g. DEV_MODE
+    ports:
+      - "<BE_PORT>:<BE_PORT>"              # e.g. "8000:8000"
+    volumes:
+      - storage:/data/storage
+    healthcheck:
+      # adjust to your health endpoint + runtime
+      test: ["CMD-SHELL", "<health check command>"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+  frontend:
+    image: ${IMAGE_REGISTRY:-localhost}/<APP>-frontend:${IMAGE_TAG:-latest}
+    # build:
+    #   context: ./frontend
+    #   args:
+    #     <PUBLIC_API_VAR>: ${<PUBLIC_API_VAR>}   # inlined at build time
+    restart: unless-stopped
+    ports:
+      - "<FE_PORT>:<FE_PORT>"              # e.g. "3000:3000"
+    depends_on:
+      - backend
+
+  # Optional HTTPS front (see deploy/Caddyfile). With Caddy on 80/443 you can
+  # drop the published ports on backend/frontend and only expose Caddy.
+  # caddy:
+  #   image: caddy:2-alpine
+  #   restart: unless-stopped
+  #   ports:
+  #     - "80:80"
+  #     - "443:443"
+  #   volumes:
+  #     - ./deploy/Caddyfile:/etc/caddy/Caddyfile:ro
+  #     - caddy_data:/data
+  #   depends_on:
+  #     - backend
+  #     - frontend
+
+volumes:
+  storage:
+  # caddy_data:

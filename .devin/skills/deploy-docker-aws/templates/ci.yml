@@ -1,0 +1,58 @@
+# CI gate — runs on every push/PR.
+# Adapt: service list, runtimes, migrate/test/lint/build commands per stack.
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:                       # remove if your tests don't need a DB
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: <APP>
+          POSTGRES_PASSWORD: <APP>
+          POSTGRES_DB: <APP>
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U <APP>" --health-interval 5s
+          --health-timeout 3s --health-retries 10
+    env:
+      DATABASE_URL: <driver>://<APP>:<APP>@localhost:5432/<APP>   # e.g. postgresql+psycopg://...
+      <APP_SECRET>: ci-secret
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5   # swap for your runtime: setup-node, setup-java, setup-go…
+        with:
+          python-version: "3.13"
+      - name: Install deps
+        working-directory: backend
+        run: <install command>          # e.g. pip install -r requirements-dev.txt "psycopg[binary]"
+      - name: Migrations
+        working-directory: backend
+        run: <migrate command>          # e.g. python -m alembic upgrade head
+      - name: Tests
+        working-directory: backend
+        run: <test command>             # e.g. python -m pytest tests/ -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Install deps
+        working-directory: frontend
+        run: npm ci
+      - name: Lint
+        working-directory: frontend
+        run: <lint command>             # e.g. npx eslint src
+      - name: Build
+        working-directory: frontend
+        run: npm run build

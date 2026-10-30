@@ -1,0 +1,22 @@
+# Automatic HTTPS reverse proxy for the deploy host.
+#
+# 1. Point DNS A records at this server's IP:
+#      app.<yourdomain>  -> frontend
+#      api.<yourdomain>  -> backend
+# 2. Replace the domains below, uncomment the `caddy` service in
+#    compose.prod.yml, then `docker compose -f compose.prod.yml up -d`.
+# 3. Update .env:  CORS_ORIGINS=https://app.<yourdomain>
+# 4. Update the frontend build arg (<PUBLIC_API_VAR>) to
+#    https://api.<yourdomain>/<api-path> and re-run the build workflow
+#    so the frontend image is rebuilt.
+#
+# Caddy provisions and renews Let's Encrypt certificates automatically.
+# Service names resolve over the compose network.
+
+app.yourdomain.com {
+	reverse_proxy frontend:<FE_PORT>
+}
+
+api.yourdomain.com {
+	reverse_proxy backend:<BE_PORT>
+}

@@ -1,0 +1,84 @@
+# Active pipeline — builds service images and pushes to Docker Hub on main.
+#
+# Repo secrets required:
+#   DOCKERHUB_USERNAME   Docker Hub user (also the namespace for the repos)
+#   DOCKERHUB_TOKEN      Docker Hub access token (Account Settings → Security)
+#
+# Docker Hub repos (public, free tier):
+#   <DOCKERHUB_USERNAME>/<APP>-backend   and   <DOCKERHUB_USERNAME>/<APP>-frontend
+#
+# Optional auto-deploy over SSH (host running compose.prod.yml):
+#   vars.DEPLOY_HOST       e.g. ubuntu@<elastic-ip> — job skipped when unset
+#   secrets.DEPLOY_SSH_KEY private key for that user
+#   vars.DEPLOY_DIR        repo checkout on the host (default ~/<APP>)
+
+name: Build & push (Docker Hub)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read   # checkout only — registry auth comes from secrets
+
+env:
+  BACKEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/<APP>-backend
+  FRONTEND_IMAGE: ${{ secrets.DOCKERHUB_USERNAME }}/<APP>-frontend
+
+jobs:
+  images:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push backend
+        uses: docker/build-push-action@v6
+        with:
+          context: backend
+          push: true
+          tags: |
+            ${{ env.BACKEND_IMAGE }}:${{ github.sha }}
+            ${{ env.BACKEND_IMAGE }}:latest
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,mode=max,scope=backend
+
+      - name: Build & push frontend
+        uses: docker/build-push-action@v6
+        with:
+          context: frontend
+          push: true
+          # Public config is inlined into the bundle at BUILD time.
+          # Set the real host URL here or via a repo secret — not in host .env.
+          build-args: |
+            <PUBLIC_API_VAR>=<http://<elastic-ip>:<be-port>/<api-path>>   # or ${{ secrets.<PUBLIC_API_VAR> }}
+          tags: |
+            ${{ env.FRONTEND_IMAGE }}:${{ github.sha }}
+            ${{ env.FRONTEND_IMAGE }}:latest
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,mode=max,scope=frontend
+
+  deploy:
+    needs: images
+    if: ${{ vars.DEPLOY_HOST != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH (compose pull + up)
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ vars.DEPLOY_HOST }}
+          username: ${{ vars.DEPLOY_USER || 'ubuntu' }}
+          key: ${{ secrets.DEPLOY_SSH_KEY }}
+          script: |
+            cd ${{ vars.DEPLOY_DIR || '~/<APP>' }}
+            git pull --ff-only
+            docker compose -f compose.prod.yml pull
+            docker compose -f compose.prod.yml up -d
+            docker image prune -f
